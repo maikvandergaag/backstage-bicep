@@ -1,6 +1,6 @@
 # Backstage Bicep: demo repo
 
-Demos for **Backstage Bicep: Exploring what's next before it ships** (Gijs Reijn & Maik van der Gaag, APE XXL, 8 Dec 2026).
+Demos for **Backstage Bicep**.
 
 > Sandbox only. Experimental flags and nightly builds are unsupported and can break between days.
 > Never copy a `bicepconfig.json` from this repo into a production repo.
