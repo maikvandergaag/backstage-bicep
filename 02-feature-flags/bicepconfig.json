@@ -1,0 +1,8 @@
+{
+  "experimentalFeaturesEnabled": {
+    "deployCommands": true,
+    "userDefinedConstraints": true,
+    "testFramework": true,
+    "assertions": true
+  }
+}

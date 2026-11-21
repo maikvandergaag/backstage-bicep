@@ -1,0 +1,11 @@
+{
+  "experimentalFeaturesEnabled": {
+    "localDeploy": true,
+    "ociEnabled": true
+  },
+  "extensions": {
+    "http": "br:ghcr.io/anthony-c-martin/bicep-ext-http:0.1.4",
+    "utilities": "br:ghcr.io/anthony-c-martin/bicep-ext-utilities:0.0.1"
+  },
+  "implicitExtensions": []
+}
