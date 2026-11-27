@@ -4,17 +4,18 @@ Written 21 Nov 2026 against `Azure/bicep` main and v0.49.2. **Re-run every demo 
 
 Time budget: about 25 minutes of demos in total. Times per demo are targets, not guarantees.
 
-| # | Demo                           | Who  | Time | Fallback                          |
-|---|--------------------------------|------|------|-----------------------------------|
-| 0 | Opening: `bicep --version`     | Gijs | 0:30 | Screenshot                        |
-| 1 | Fresh on main                  | TBD  | 4:00 | Recording                         |
-| 2 | Feature flags in action        | TBD  | 7:00 | Recording, pre-deployed stack     |
-| 3 | Bicep without Azure            | TBD  | 4:00 | Recording                         |
-| 4 | Commands without a flag        | TBD  | 4:00 | Pre-generated README and snapshot |
-| 5 | Run a PR, close the loop       | TBD  | 5:00 | PR build pre-installed            |
-| 6 | Test Bicep with C# (PR #20574) | TBD  | 3:30 | Recording                         |
+| # | Demo                                         | Who  | Time | Fallback                          |
+|---|----------------------------------------------|------|------|-----------------------------------|
+| 0 | Opening: `bicep --version`                   | Gijs | 0:30 | Screenshot                        |
+| 1 | Fresh on main                                | TBD  | 4:00 | Recording                         |
+| 2 | Feature flags in action                      | TBD  | 7:00 | Recording, pre-deployed stack     |
+| 3 | Bicep without Azure                          | TBD  | 4:00 | Recording                         |
+| 4 | Commands without a flag                      | TBD  | 4:00 | Pre-generated README and snapshot |
+| 5 | Run a PR, close the loop                     | TBD  | 5:00 | PR build pre-installed            |
+| 6 | Test Bicep with C# (PR #20574)               | TBD  | 3:30 | Recording                         |
+| 7 | Modules that are not deployments (PR #20563) | TBD  | 4:00 | Recording                         |
 
-Demo 6 was added on 27 Nov and is **not** in the 25 minutes yet. Swap it in for something, or trim elsewhere.
+Demos 6 and 7 were added on 27 Nov and are **not** in the 25 minutes yet. Swap them in for something, or trim elsewhere. Demo 7 is an open PR that needs only the CLI, so it can take the place of Demo 5.
 
 ---
 
@@ -60,6 +61,7 @@ $env:AZURE_RESOURCE_GROUP  = "rg-backstage-bicep-demo"
 - [ ] Demo 4: `main.snapshot.json` generated (step 4.2) so `--mode validate` has a baseline.
 - [ ] Demo 5: PR build installed in a separate folder, PR open in the browser.
 - [ ] Demo 6: `./setup.ps1` run in `06-dotnet-tests`, then `dotnet test` run once (downloads the pinned CLI, restores NuGet packages).
+- [ ] Demo 7: PR build installed in `~/.bicep-pr`, alias `bicep-pr` set in the demo terminal, `deploymentModules` is `false` in `07-deployment-modules/bicepconfig.json`.
 - [ ] Terminal font 20pt+, VS Code zoom 2-3, notifications off, light-on-dark theme matching the deck.
 - [ ] Recordings of every demo on the laptop **and** on a USB stick.
 
@@ -329,6 +331,83 @@ dotnet test --logger "console;verbosity=normal"
 - Workflow artifacts expire. If `setup.ps1` finds nothing, pass a newer `-RunId`. Keep a copy of the two `.nupkg` files with the recordings.
 - If v0.50 ships before 8 Dec the package will be on nuget.org and `Version="*-*"` picks it up from there. Then change the story in 6.2 to "two weeks ago you had to take this from CI".
 - Read the Bicep files from the source folder, not from `bin`: the tests do this with `[CallerFilePath]`, so the edit in 6.4 needs no rebuild step.
+
+**Fallback:** recording.
+
+---
+
+## Demo 7: Modules that are not deployments (`07-deployment-modules`)
+
+PR **#20563** adds the experimental flag `deploymentModules`. With it, a module compiles to the new resource type `Microsoft.Resources/deployments/modules` instead of a nested `Microsoft.Resources/deployments`. Modules become children of the root deployment and, according to the PR, no longer count toward the limit of 800 deployments per scope.
+
+Checked 27 Nov: the PR is an **open draft** with merge conflicts, so it is in no nightly. Verified with the PR build `0.49.62 (affa4f3351)` from run 45493178956. Check the status the week before: if it merged, use a build of main and tell it as "merged last week".
+
+Compile only. No Azure login, no deployment.
+
+### 7.1 Setup (before the talk, not on stage)
+
+```powershell
+iex "& { $(irm https://aka.ms/bicep/nightly-cli.ps1) } -RunId 45493178956 -BinaryPath $HOME\.bicep-pr"
+Set-Alias bicep-pr "$HOME\.bicep-pr\bicep.exe"
+bicep-pr --version
+```
+
+**Expect:** `Bicep CLI version 0.49.62 (affa4f3351)`.
+
+- `-Branch levi/deployment-modules` does not work: the branch has no green build. Use `-RunId`.
+- The alias only lives in that terminal. Set it in the terminal you demo from.
+- The artifact is kept until 22 Feb 2027.
+
+### 7.2 The problem (45 s, no typing)
+
+Show `main.bicep` and `modules/workload.bicep`: three workloads, each with two storage accounts.
+
+**Say:** "Nine modules. Today every module is a deployment of its own, so one run of this file writes ten entries into the deployment history of my resource group. A resource group keeps 800. Azure cleans up for you, unless there is a delete lock on the resource group, or your pipelines run in parallel. Then you get DeploymentQuotaExceeded. Who has seen that one?"
+
+### 7.3 Flag off, flag on (1:30)
+
+```powershell
+cd 07-deployment-modules
+./show-modules.ps1
+```
+
+**Expect:** three rows, `workload (loop)`, `data` and `logs`, all `Microsoft.Resources/deployments`, API version `2025-04-01`.
+
+In `bicepconfig.json` set `deploymentModules` to `true`. Run `./show-modules.ps1` again.
+
+**Expect:** the same three rows, now `Microsoft.Resources/deployments/modules`, API version `2026-10-05-preview`.
+
+Optional: `bicep-pr build main.bicep`, open `main.json`, and show `name` (`<root deployment>/<module name>`) and `properties.resourceScope.id`.
+
+**Point to make:** "I did not touch the Bicep file. Same modules, different resource type. They hang under the one root deployment, so this run would write one history entry instead of ten."
+
+### 7.4 What breaks (1:00)
+
+Show `same-name.bicep`: two modules named `storage`, in two resource groups. With the flag still on:
+
+```powershell
+bicep-pr build same-name.bicep
+```
+
+**Expect:** two `BCP122` errors: `Modules: "west", "east" are defined with this same name and this same scope in a file.`
+
+**Point to make:** "This compiles today. With the flag, module names must be unique in the whole deployment, not per resource group. If your modules reuse names across scopes, you want to find that out now and not on release day."
+
+### 7.5 Close the loop (45 s)
+
+Open the PR in the browser and say what you would write. Two things found while building this demo:
+
+1. The BCP122 message says "this same scope", but the scopes differ. The message is wrong for this case.
+2. With the flag on, `bicep snapshot` predicts the same 6 storage accounts, but module outputs stay unresolved `reference(...)` expressions. Tests on outputs would fail.
+
+Do not post live unless you mean it.
+
+Set `deploymentModules` back to `false`.
+
+**Watch out:**
+- Run `bicep-pr`, not `bicep`. Other versions ignore the flag silently: `show-modules.ps1` then shows regular deployments in both runs and nothing fails.
+- Do not deploy the result on stage. The feature needs an ARM preview. We never deployed it, so "does not count toward 800" is what the PR says, not something we measured. Say it that way.
+- The PR is a draft: output, API version and error messages can change with any push. Re-run 7.3 and 7.4 in the week before the talk if you install a newer build.
 
 **Fallback:** recording.
 
