@@ -5,13 +5,15 @@ Demos for **Backstage Bicep**.
 > Sandbox only. Experimental flags and nightly builds are unsupported and can break between days.
 > Never copy a `bicepconfig.json` from this repo into a production repo.
 
-| Folder | Demo | Slide | Needs Azure | Needs nightly |
-|---|---|---|---|---|
-| `01-fresh-on-main` | Fresh on main: `file:` references, config errors as diagnostics | Fresh on main (Demo 1) | No | Yes (main after 18 Nov 2026) |
-| `02-feature-flags` | `deployCommands`, `@validate()`, `bicep test` | Feature flags in action (Demo 2) | Yes (deploy/teardown) | No, flags work on v0.49.2 |
-| `03-local-deploy` | `bicep local-deploy` with the http and utilities extensions | Bicep without Azure (Demo 3) | No | No |
-| `04-no-flag-commands` | `bicep snapshot`, `bicep docs generate` | Experimental commands without a flag (Demo 4) | No | No |
-| `05-run-a-pr` | Install a PR build, try it, comment | Run a PR (Demo 5) | No | PR build |
+| Folder                  | Demo                                                                                  | Slide                                         | Needs Azure           | Needs nightly                                                 |
+|-------------------------|---------------------------------------------------------------------------------------|-----------------------------------------------|-----------------------|---------------------------------------------------------------|
+| `01-fresh-on-main`      | Fresh on main: `file:` references, config errors as diagnostics                       | Fresh on main (Demo 1)                        | No                    | Yes (main after 18 Nov 2026)                                  |
+| `02-feature-flags`      | `deployCommands`, `@validate()`, `bicep test`                                         | Feature flags in action (Demo 2)              | Yes (deploy/teardown) | No, flags work on v0.49.2                                     |
+| `03-local-deploy`       | `bicep local-deploy` with the http and utilities extensions                           | Bicep without Azure (Demo 3)                  | No                    | No                                                            |
+| `04-no-flag-commands`   | `bicep snapshot`, `bicep docs generate`                                               | Experimental commands without a flag (Demo 4) | No                    | No                                                            |
+| `05-run-a-pr`           | Install a PR build, try it, comment                                                   | Run a PR (Demo 5)                             | No                    | PR build                                                      |
+| `06-dotnet-tests`       | C# tests on evaluated Bicep with `Azure.Bicep.Testing.Framework` (PR #20574)          | No slide yet (Demo 6)                         | No                    | No, but the NuGet package comes from a CI build (`setup.ps1`) |
+| `07-deployment-modules` | `deploymentModules`: modules as `Microsoft.Resources/deployments/modules` (PR #20563) | No slide yet (Demo 7)                         | No                    | PR build                                                      |
 
 Each demo folder has its own `bicepconfig.json` with only the flags that demo needs, so flags never leak between demos.
 
@@ -24,3 +26,4 @@ The step-by-step script, expected output and fallbacks are in [DEMO-RUNBOOK.md](
 - GitHub CLI (`gh`), logged in. The nightly install scripts use it.
 - Azure CLI, logged in to a **sandbox** subscription, for Demo 2 only.
 - An empty sandbox resource group for Demo 2.
+- .NET 10 SDK, for Demo 6 only.
